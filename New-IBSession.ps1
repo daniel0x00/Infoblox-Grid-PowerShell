@@ -38,7 +38,7 @@ Function New-IBSession {
     {
         # Create the first GET request of login page
         if (-not($Uri -match '/$')) { $Uri = $Uri+'/' }
-        $WebRequest = Invoke-WebRequest -Uri $Uri -Method Get -SessionVariable TempSession -ErrorAction Stop
+        $WebRequest = Invoke-WebRequest -Uri $Uri -Method Get -SessionVariable LoginSession -ErrorAction Stop
 
         # Filling the login form:
         $WebRequest.Forms['loginForm'].fields['username'] = $credential.UserName
@@ -46,15 +46,15 @@ Function New-IBSession {
         $LoginToken = $WebRequest | Select -ExpandProperty InputFields | Where-Object { $_.outerHTML -match 'loginButton' } | Select onclick -Unique | ForEach-Object { [string](([regex]::Match($_.onclick,"Form\'\, '\.\/(?<form_id>[a-zA-Z0-9\-_]+)'\,")).groups["form_id"].value) }
         Write-Verbose "Login token: $LoginToken"
 
-        Invoke-WebRequest -Uri ($Uri + $LoginToken) -Method Post -Body $WebRequest.Forms['loginForm'].Fields -WebSession $TempSession -ContentType application/x-www-form-urlencoded -ErrorAction Stop
+        $WebRequest = Invoke-WebRequest -Uri ($Uri + $LoginToken) -Method Post -Body $WebRequest.Forms['loginForm'].Fields -WebSession $LoginSession -ContentType application/x-www-form-urlencoded -ErrorAction Stop
     }
     catch
     {
         Throw "Error retrieving session: $_"
     }
 
-    if($PassThru)
+    if ($PassThru)
     {
-        $TempSession
+        $LoginSession
     }
 }
