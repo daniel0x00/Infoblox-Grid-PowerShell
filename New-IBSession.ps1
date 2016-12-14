@@ -28,10 +28,7 @@ Function New-IBSession {
         [string] $Uri,
 
         [Parameter(Mandatory=$true, ValueFromPipelineByPropertyName=$true)]
-        [System.Management.Automation.PSCredential] $Credential,
-
-        [Parameter(Mandatory=$false)]
-        [switch] $PassThru
+        [System.Management.Automation.PSCredential] $Credential
     )
 
     try
@@ -44,17 +41,21 @@ Function New-IBSession {
         $WebRequest.Forms['loginForm'].fields['username'] = $credential.UserName
         $WebRequest.Forms['loginForm'].fields['password'] = $credential.GetNetworkCredential().Password
         $LoginToken = $WebRequest | Select -ExpandProperty InputFields | Where-Object { $_.outerHTML -match 'loginButton' } | Select onclick -Unique | ForEach-Object { [string](([regex]::Match($_.onclick,"Form\'\, '\.\/(?<form_id>[a-zA-Z0-9\-_]+)'\,")).groups["form_id"].value) }
-        Write-Verbose "Login token: $LoginToken"
+        Write-Verbose "Login URL: $($Uri + $LoginToken)"
 
-        $WebRequest = Invoke-WebRequest -Uri ($Uri + $LoginToken) -Method Post -Body $WebRequest.Forms['loginForm'].Fields -WebSession $LoginSession -ContentType application/x-www-form-urlencoded -ErrorAction Stop
+        $WebRequest = Invoke-WebRequest -Uri ($Uri + $LoginToken) -Method Post -Body $WebRequest.Forms['loginForm'].Fields -WebSession $LoginSession -ErrorAction Stop -Headers @{"Wicket-Ajax"="true";"Wicket-Ajax-BaseURL"=".";"Wicket-FocusedElementId"="loginButton"}
+        
+        if ($WebRequest.Headers['Ajax-Location'] -eq $null) { throw }
     }
     catch
     {
-        Throw "Error retrieving session: $_"
+        throw "Received invalid session. Bad credentials? $_"
     }
 
-    if ($PassThru)
-    {
-        $LoginSession
-    }
+    $ReturnObject = New-Object System.Object
+    $ReturnObject | Add-Member -Type NoteProperty -Name Uri -Value ($Uri + $WebRequest.Headers['Ajax-Location'])
+    $ReturnObject | Add-Member -Type NoteProperty -Name Credential -Value $Credential
+    $ReturnObject | Add-Member -Type NoteProperty -Name WebSession -Value $LoginSession
+
+    $ReturnObject
 }
