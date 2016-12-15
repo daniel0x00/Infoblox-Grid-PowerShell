@@ -28,33 +28,37 @@ Function New-IBSession {
         [System.Management.Automation.PSCredential] $Credential
     )
 
-    try
-    {
-        # Create the first GET request of login page:
-        if (-not($Uri -match '/$')) { $Uri = $Uri+'/' }
-        $WebRequest = Invoke-WebRequest -Uri $Uri -Method Get -SessionVariable LoginSession -ErrorAction Stop 
+    begin { }
+    process {
+        try
+        {
+            # Create the first GET request of login page:
+            if (-not($Uri -match '/$')) { $Uri = $Uri+'/' }
+            $WebRequest = Invoke-WebRequest -Uri $Uri -Method Get -SessionVariable LoginSession -ErrorAction Stop 
 
-        # Filling the login form and submitting it:
-        $RandomNumber = Get-Random -Minimum 0.0 -Maximum 0.99; $RandomNumber = $RandomNumber -replace ',','.'
-        $WebRequest.Forms['loginForm'].fields['username'] = $credential.UserName
-        $WebRequest.Forms['loginForm'].fields['password'] = $credential.GetNetworkCredential().Password
-        $LoginToken = $WebRequest | Select -ExpandProperty InputFields | Where-Object { $_.outerHTML -match 'loginButton' } | Select onclick -Unique | ForEach-Object { [string](([regex]::Match($_.onclick,"Form\'\, '\.\/(?<form_id>[a-zA-Z0-9\-_]+)'\,")).groups["form_id"].value) }
+            # Filling the login form and submitting it:
+            $RandomNumber = Get-Random -Minimum 0.0 -Maximum 0.99; $RandomNumber = $RandomNumber -replace ',','.'
+            $WebRequest.Forms['loginForm'].fields['username'] = $credential.UserName
+            $WebRequest.Forms['loginForm'].fields['password'] = $credential.GetNetworkCredential().Password
+            $LoginToken = $WebRequest | Select -ExpandProperty InputFields | Where-Object { $_.outerHTML -match 'loginButton' } | Select onclick -Unique | ForEach-Object { [string](([regex]::Match($_.onclick,"Form\'\, '\.\/(?<form_id>[a-zA-Z0-9\-_]+)'\,")).groups["form_id"].value) }
 
-        $WebRequest = Invoke-WebRequest -Uri ($Uri + $LoginToken + "?random=$RandomNumber") -Method Post -Body $WebRequest.Forms['loginForm'].Fields -WebSession $LoginSession -ErrorAction Stop -Headers @{"Wicket-Ajax"="true";"Wicket-Ajax-BaseURL"="."} 
+            $WebRequest = Invoke-WebRequest -Uri ($Uri + $LoginToken + "?random=$RandomNumber") -Method Post -Body $WebRequest.Forms['loginForm'].Fields -WebSession $LoginSession -ErrorAction Stop -Headers @{"Wicket-Ajax"="true";"Wicket-Ajax-BaseURL"="."} 
         
-        # Get Base URL id from Ajax-Location response header:
-        $BaseURL = [string](([regex]::Match($WebRequest.Headers['Ajax-Location'],"\.\/(?<base_url>[a-zA-Z0-9\-_\/]+)")).groups["base_url"].value)
-        if ($BaseURL -eq $null) { throw }
-    }
-    catch
-    {
-        throw "Received invalid session. Bad credentials?"
-    }
+            # Get Base URL id from Ajax-Location response header:
+            $BaseURL = [string](([regex]::Match($WebRequest.Headers['Ajax-Location'],"\.\/(?<base_url>[a-zA-Z0-9\-_\/]+)")).groups["base_url"].value)
+            if ($BaseURL -eq $null) { throw }
+            
+            $ReturnObject = New-Object System.Object
+            $ReturnObject | Add-Member -Type NoteProperty -Name Uri -Value $Uri
+            $ReturnObject | Add-Member -Type NoteProperty -Name BaseURL -Value $BaseURL
+            $ReturnObject | Add-Member -Type NoteProperty -Name WebSession -Value $LoginSession
 
-    $ReturnObject = New-Object System.Object
-    $ReturnObject | Add-Member -Type NoteProperty -Name Uri -Value $Uri
-    $ReturnObject | Add-Member -Type NoteProperty -Name BaseURL -Value $BaseURL
-    $ReturnObject | Add-Member -Type NoteProperty -Name WebSession -Value $LoginSession
-
-    $ReturnObject
+            $ReturnObject
+        }
+        catch
+        {
+            throw "Received invalid session. Bad credentials?"
+        }
+    }
+    end { }
 }
