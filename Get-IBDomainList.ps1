@@ -27,12 +27,12 @@ Function Get-IBDomainList {
     .PARAMETER Passthru
         If specified, pass to the pipeline the WebSession & BaseURL, required to query each domain separately.
 
-        Switch. Not Mandatory.
+        Switch. Not mandatory.
 
     .PARAMETER FindOne
         If specified, domain list will only return the first page of results instead recurring query all possible pages.
 
-        Switch. Not Mandatory.
+        Switch. Not mandatory.
 
     #>   
     [CmdletBinding()]

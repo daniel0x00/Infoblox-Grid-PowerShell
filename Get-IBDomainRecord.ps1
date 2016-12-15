@@ -3,6 +3,56 @@ Function Get-IBDomainRecord {
     .SYNOPSIS
         Get a list of all DNS records of the specified domain.
 
+    .DESCRIPTION
+        Query the DNS records of a specific domain. Requires a valid input obtained with Get-IBDomainList function. 
+
+    .EXAMPLE
+        New-IBSession -Uri https://grid.infobloxserver.com/ui/ (get-credential) | Get-IBDomainList -FindOne -Passthru | Get-IBDomainRecord
+
+    .EXAMPLE
+        New-IBSession -Uri https://grid.infobloxserver.com/ui/ (get-credential) | Get-IBDomainList -FindOne -Passthru | select -First 10 | Get-IBDomainRecord -Filter "A" | ft
+
+    .PARAMETER Uri
+        The base Uri for the Infoblox.
+        
+        String. Mandatory. Pipeline enabled.
+
+    .PARAMETER BaseURL
+        The base URL obtained in the Infoblox login process (New-IBSession takes care of it).
+
+        String. Mandatory. Pipeline enabled.
+
+    .PARAMETER CallbackURL
+        If specified, pass to the pipeline the WebSession & BaseURL, required to query each domain separately.
+
+        String. Mandatory.
+
+    .PARAMETER WebSession
+        The web session created in the Infoblox login process (New-IBSession takes care of it).
+
+        WebRequestSession. Mandatory. Pipeline enabled.
+    
+    .PARAMETER ObjectName
+        Object to query. Obtained by Get-IBDomainList function. 
+
+        String. Mandatory.
+
+    .PARAMETER ObjectType
+        Object to query. Obtained by Get-IBDomainList function. 
+
+        String. Mandatory.
+
+    .PARAMETER ObjectId
+        Object to query. Obtained by Get-IBDomainList function. 
+
+        String. Mandatory.
+
+    .PARAMETER Filter
+        Filter to only request specific record type. If not specified, will return all possible record types.
+        Possible values to filter are: A, AAAA, CNAME, DNAME, DNSKEY, DS, HOST, LBDN, MX, NAPTR, NS, NSEC, NSEC3, NSEC3PARAM, PTR, RRSIG, SRV, TXT, SOA
+
+        String. Not mandatory.
+
     #>   
     [CmdletBinding()]
     [OutputType([psobject])]
@@ -29,7 +79,7 @@ Function Get-IBDomainRecord {
         [string] $ObjectId,
 
         [Parameter(Mandatory=$false, ValueFromPipelineByPropertyName=$true)]
-        [ValidateSet("A","AAAA","CNAME","DNAME","DNSKEY","DS","HOST","LBDN","MX","NAPTR","NS","NSEC","NSEC3","NSEC3PARAM","PTR","RRSIG","SRV","TXT")]
+        [ValidateSet("A","AAAA","CNAME","DNAME","DNSKEY","DS","HOST","LBDN","MX","NAPTR","NS","NSEC","NSEC3","NSEC3PARAM","PTR","RRSIG","SRV","TXT","SOA")]
         [string] $Filter
     )
 
@@ -70,7 +120,7 @@ Function Get-IBDomainRecord {
                     $ReturnObject | Add-Member -Type NoteProperty -Name RecordValue -Value $RecordValue
 
                     $ReturnObject
-                    
+                     
                 }
             }
             until (-not $JsonResponse.has_next) # Query the internal API while there is a next page of results available.
