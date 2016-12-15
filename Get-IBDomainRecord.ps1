@@ -131,4 +131,5 @@ Function Get-IBDomainRecord {
             throw "Can't obtain data."
         }
     }
+    end { }
 }
