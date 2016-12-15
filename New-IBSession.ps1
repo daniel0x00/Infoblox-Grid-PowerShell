@@ -48,13 +48,12 @@ Function New-IBSession {
     }
     catch
     {
-        throw "Received invalid session. Bad credentials? $_"
+        throw "Received invalid session. Bad credentials?"
     }
 
     $ReturnObject = New-Object System.Object
     $ReturnObject | Add-Member -Type NoteProperty -Name Uri -Value $Uri
     $ReturnObject | Add-Member -Type NoteProperty -Name BaseURL -Value $BaseURL
-    $ReturnObject | Add-Member -Type NoteProperty -Name Credential -Value $Credential
     $ReturnObject | Add-Member -Type NoteProperty -Name WebSession -Value $LoginSession
 
     $ReturnObject
