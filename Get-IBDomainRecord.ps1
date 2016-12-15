@@ -26,7 +26,11 @@ Function Get-IBDomainRecord {
         [string] $ObjectType,
 
         [Parameter(Mandatory=$true, ValueFromPipelineByPropertyName=$true)]
-        [string] $ObjectId
+        [string] $ObjectId,
+
+        [Parameter(Mandatory=$false, ValueFromPipelineByPropertyName=$true)]
+        [ValidateSet("A","AAAA","CNAME","DNAME","DNSKEY","DS","HOST","LBDN","MX","NAPTR","NS","NSEC","NSEC3","NSEC3PARAM","PTR","RRSIG","SRV","TXT")]
+        [string] $Filter
     )
 
     begin { }
@@ -50,7 +54,11 @@ Function Get-IBDomainRecord {
                 foreach ($object in $JsonResponse.root) {
 
                     # Grab data from json response:
-                    $RecordType = [string](([regex]::Match($object.customProperties.objInfo.objectName,"(?<record_type>[A-Za-z0-9]+ [A-Za-z0-9]+) ")).groups["record_type"].value)
+                    $RecordType = [string](([regex]::Match($object.customProperties.objInfo.objectName,"(?<record_type>[A-Za-z0-9]+) [A-Za-z0-9]+ ")).groups["record_type"].value).ToUpper()
+
+                    # Check if there is a filter for a record type:
+                    if ((-not($Filter -eq $null)) -and (-not($RecordType -like $Filter.ToUpper()))) { continue }
+                    
                     $RecordName = [string](([regex]::Match($object.dns_name,"<span[^>]*>(?<dns_name>.*?)</span>")).groups["dns_name"].value)
                     $RecordValue = [string](([regex]::Match($object.value,"<span[^>]*>(?<value>.*?)</span>")).groups["value"].value)
 
@@ -62,6 +70,7 @@ Function Get-IBDomainRecord {
                     $ReturnObject | Add-Member -Type NoteProperty -Name RecordValue -Value $RecordValue
 
                     $ReturnObject
+                    
                 }
             }
             until (-not $JsonResponse.has_next) # Query the internal API while there is a next page of results available.
