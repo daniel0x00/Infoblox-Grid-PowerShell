@@ -54,7 +54,7 @@ Function Get-IBDomainList {
         [switch] $FindOne
     )
 
-    begin { }
+    begin { $ReturnArray = @() }
     process {
         try
         {
@@ -97,7 +97,7 @@ Function Get-IBDomainList {
                         $ReturnObject | Add-Member -Type NoteProperty -Name WebSession -Value $WebSession
                     }
 
-                    $ReturnObject
+                    $ReturnArray += $ReturnObject
                 }
             }
             until ((-not $JsonResponse.has_next) -or ($FindOne)) # Query the internal API while there is a next page of results available or user specified -FindOne switch parameter.
@@ -108,5 +108,5 @@ Function Get-IBDomainList {
             throw "Can't obtain data."
         }
     }
-    end { }
+    end { $ReturnArray }
 }

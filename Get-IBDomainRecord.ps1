@@ -80,7 +80,7 @@ Function Get-IBDomainRecord {
 
         [Parameter(Mandatory=$false, ValueFromPipelineByPropertyName=$true)]
         [ValidateSet("A","AAAA","CNAME","DNAME","DNSKEY","DS","HOST","LBDN","MX","NAPTR","NS","NSEC","NSEC3","NSEC3PARAM","PTR","RRSIG","SRV","TXT","SOA")]
-        [string] $Filter
+        [string] $Filter=$false
     )
 
     begin { }
@@ -107,7 +107,7 @@ Function Get-IBDomainRecord {
                     $RecordType = [string](([regex]::Match($object.customProperties.objInfo.objectName,"(?<record_type>[A-Za-z0-9]+) [A-Za-z0-9]+ ")).groups["record_type"].value).ToUpper()
 
                     # Check if there is a filter for a record type:
-                    if ((-not($Filter -eq $null)) -and (-not($RecordType -like $Filter.ToUpper()))) { continue }
+                    if ((-not($Filter -eq $false)) -and (-not($RecordType -like $Filter.ToUpper()))) { continue }
                     
                     $RecordName = [string](([regex]::Match($object.dns_name,"<span[^>]*>(?<dns_name>.*?)</span>")).groups["dns_name"].value)
                     $RecordValue = [string](([regex]::Match($object.value,"<span[^>]*>(?<value>.*?)</span>")).groups["value"].value)
