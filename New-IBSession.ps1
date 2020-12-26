@@ -34,15 +34,49 @@ Function New-IBSession {
         {
             # Create the first GET request of login page:
             if (-not($Uri -match '/$')) { $Uri = $Uri+'/' }
-            $WebRequest = Invoke-WebRequest -Uri $Uri -Method Get -SessionVariable LoginSession -ErrorAction Stop 
+
+            $FirstRequestParameters = @{
+                Uri = $Uri
+                Method = 'Get'
+                Headers = @{
+                    "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
+                }
+            }
+
+            $FirstRequest = Invoke-WebRequest @FirstRequestParameters -SessionVariable LoginSession -ErrorAction Stop -SkipCertificateCheck
 
             # Filling the login form and submitting it:
-            $RandomNumber = Get-Random -Minimum 0.0 -Maximum 0.99; $RandomNumber = $RandomNumber -replace ',','.'
-            $WebRequest.Forms['loginForm'].fields['username'] = $credential.UserName
-            $WebRequest.Forms['loginForm'].fields['password'] = $credential.GetNetworkCredential().Password
-            $LoginToken = $WebRequest | Select -ExpandProperty InputFields | Where-Object { $_.outerHTML -match 'loginButton' } | Select onclick -Unique | ForEach-Object { [string](([regex]::Match($_.onclick,"Form\'\, '\.\/(?<form_id>[a-zA-Z0-9\-_]+)'\,")).groups["form_id"].value) }
+            #$FirstRequest.Forms['loginForm'].fields['username'] = $credential.UserName
+            #$FirstRequest.Forms['loginForm'].fields['password'] = $credential.GetNetworkCredential().Password
+            #$LoginToken = $FirstRequest | Select-Object -ExpandProperty InputFields | Where-Object { $_.outerHTML -match 'loginButton' } | Select-Object onclick -Unique | ForEach-Object { [string](([regex]::Match($_.onclick,"Form\'\, '\.\/(?<form_id>[a-zA-Z0-9\-_]+)'\,")).groups["form_id"].value) }
 
-            $WebRequest = Invoke-WebRequest -Uri ($Uri + $LoginToken + "?random=$RandomNumber") -Method Post -Body $WebRequest.Forms['loginForm'].Fields -WebSession $LoginSession -ErrorAction Stop -Headers @{"Wicket-Ajax"="true";"Wicket-Ajax-BaseURL"="."} 
+            $LoginToken = [string](([regex]::Match($FirstRequest.Content,"Form&#039;\, &#039;\.\/(?<form_id>[a-zA-Z0-9\-_]+)&#039;\,")).groups["form_id"].value)
+            Write-Verbose "[New-IBSession] LoginToken: $LoginToken" 
+            $Username = $credential.UserName
+            $Password = $credential.GetNetworkCredential().Password
+            $LoginURL = $Uri + $LoginToken + "?random=" + ((Get-Random -Minimum 0.0 -Maximum 0.99) -replace ',','.')
+
+            $LoginParameters = @{
+                Uri = $LoginURL
+                Method = 'Post'
+                #Body = $FirstRequest.Forms['loginForm'].Fields
+                Body = "loginForm_hf_0=&username=$Username&password=$Password&loginButton=Login&timezone=&contextId="
+                WebSession = $LoginSession
+                ContentType = 'application/x-www-form-urlencoded;charset=UTF-8'
+                Headers = @{
+                    "Wicket-Ajax" = "true"
+                    "Wicket-Ajax-BaseURL" = "."
+                    "Referer" = $Uri
+                    "Origin" = $Uri -replace '/ui/',''
+                    "Accept" = "text/xml"
+                    "Sec-Fetch-Site" = "same-origin"
+                    "Sec-Fetch-Mode" = "cors"
+                    "Sec-Fetch-Dest" = "empty"
+                    "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
+                }
+            }
+
+            $WebRequest = Invoke-WebRequest @LoginParameters -ErrorAction Stop -SkipCertificateCheck
         
             # Get Base URL id from Ajax-Location response header:
             $BaseURL = [string](([regex]::Match($WebRequest.Headers['Ajax-Location'],"\.\/(?<base_url>[a-zA-Z0-9\-_\/]+)")).groups["base_url"].value)
@@ -57,7 +91,7 @@ Function New-IBSession {
         }
         catch
         {
-            throw "Received invalid session. Bad credentials?"
+            throw "Received invalid session. Bad credentials? Exception: " + $_.Exception.Message
         }
     }
     end { }
