@@ -1,4 +1,8 @@
 Function Get-IBDomainList {
+
+    # Author: Daniel Ferreira (@daniel0x00)  
+    # License: BSD 3-Clause
+
     <#
     .SYNOPSIS
         Get a list of all domains in DNS records of Infoblox. 

@@ -1,4 +1,8 @@
 Function Get-IBDomainRecord {
+    
+    # Author: Daniel Ferreira (@daniel0x00)  
+    # License: BSD 3-Clause
+
     <#
     .SYNOPSIS
         Get a list of all DNS records of the specified domain. 

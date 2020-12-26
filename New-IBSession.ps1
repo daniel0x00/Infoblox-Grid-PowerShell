@@ -1,4 +1,8 @@
 Function New-IBSession {
+
+    # Author: Daniel Ferreira (@daniel0x00)  
+    # License: BSD 3-Clause
+
     <#
     .SYNOPSIS
         Login to Infoblox platform by NOT using the API connection, but wrapper the http querys the site does to login the user when using a web browser. 
