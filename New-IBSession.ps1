@@ -1,8 +1,4 @@
 Function New-IBSession {
-
-    # Author: Daniel Ferreira (@daniel0x00)  
-    # License: BSD 3-Clause
-
     <#
     .SYNOPSIS
         Login to Infoblox platform by NOT using the API connection, but wrapper the http querys the site does to login the user when using a web browser. 
@@ -43,28 +39,24 @@ Function New-IBSession {
                 Uri = $Uri
                 Method = 'Get'
                 Headers = @{
-                    "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
+                    "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.106 Safari/537.36"
                 }
             }
 
-            $FirstRequest = Invoke-WebRequest @FirstRequestParameters -SessionVariable LoginSession -ErrorAction Stop -SkipCertificateCheck
+            $FirstRequest = Invoke-WebRequest @FirstRequestParameters -SessionVariable LoginSession -ErrorAction Stop -SkipCertificateCheck 
 
-            # Filling the login form and submitting it:
-            #$FirstRequest.Forms['loginForm'].fields['username'] = $credential.UserName
-            #$FirstRequest.Forms['loginForm'].fields['password'] = $credential.GetNetworkCredential().Password
-            #$LoginToken = $FirstRequest | Select-Object -ExpandProperty InputFields | Where-Object { $_.outerHTML -match 'loginButton' } | Select-Object onclick -Unique | ForEach-Object { [string](([regex]::Match($_.onclick,"Form\'\, '\.\/(?<form_id>[a-zA-Z0-9\-_]+)'\,")).groups["form_id"].value) }
-
-            $LoginToken = [string](([regex]::Match($FirstRequest.Content,"Form&#039;\, &#039;\.\/(?<form_id>[a-zA-Z0-9\-_]+)&#039;\,")).groups["form_id"].value)
+            #$LoginToken = [string](([regex]::Match($FirstRequest.Content,"Form&#039;\, &#039;\.\/(?<form_id>[a-zA-Z0-9\-_]+)&#039;\,")).groups["form_id"].value)
+            $LoginToken = [string](([regex]::Match($FirstRequest.Content,"wicketSubmitFormById\(&#039;loginForm&#039;,.?&#039;\.\/(?<form_id>[a-zA-Z0-9\-_]+)&#039;, &#039;loginButton")).groups["form_id"].value)
             Write-Verbose "[New-IBSession] LoginToken: $LoginToken" 
-            $Username = $credential.UserName
-            $Password = $credential.GetNetworkCredential().Password
+
+            $Username = $Credential.UserName
+            $Password = [uri]::EscapeDataString($Credential.GetNetworkCredential().Password)
             $LoginURL = $Uri + $LoginToken + "?random=" + ((Get-Random -Minimum 0.0 -Maximum 0.99) -replace ',','.')
 
             $LoginParameters = @{
                 Uri = $LoginURL
                 Method = 'Post'
-                #Body = $FirstRequest.Forms['loginForm'].Fields
-                Body = "loginForm_hf_0=&username=$Username&password=$Password&loginButton=Login&timezone=&contextId="
+                Body = "loginForm_hf_0=&username=$Username&password=$Password&contextId=&loginButton=1"
                 WebSession = $LoginSession
                 ContentType = 'application/x-www-form-urlencoded;charset=UTF-8'
                 Headers = @{
@@ -76,11 +68,12 @@ Function New-IBSession {
                     "Sec-Fetch-Site" = "same-origin"
                     "Sec-Fetch-Mode" = "cors"
                     "Sec-Fetch-Dest" = "empty"
-                    "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
+                    "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.106 Safari/537.36"
+                    "sec-ch-ua" = '" Not;A Brand";v="99", "Google Chrome";v="91", "Chromium";v="91"'
                 }
             }
 
-            $WebRequest = Invoke-WebRequest @LoginParameters -ErrorAction Stop -SkipCertificateCheck
+            $WebRequest = Invoke-WebRequest @LoginParameters -ErrorAction Stop -SkipCertificateCheck 
         
             # Get Base URL id from Ajax-Location response header:
             $BaseURL = [string](([regex]::Match($WebRequest.Headers['Ajax-Location'],"\.\/(?<base_url>[a-zA-Z0-9\-_\/]+)")).groups["base_url"].value)
