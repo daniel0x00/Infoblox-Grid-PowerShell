@@ -118,6 +118,7 @@ Function Get-IBDomainList {
                 # Iterate through root object and return results to the pipeline:
                 foreach ($object in $JsonResponse.root) {
 
+                    $DomainId = ($object.customProperties.objInfo.objectId -replace '&nbsp;',' ' -replace '&amp;','&' -replace '<[^>]*>','').Trim()
                     $DomainFQDN = ($object.fqdn -replace '&nbsp;',' ' -replace '&amp;','&' -replace '<[^>]*>','').Trim()
                     $DomainType = ($object.ibapObject -replace '&nbsp;',' ' -replace '&amp;','&' -replace '<[^>]*>','').Trim()
                     $DomainZoneType = ($object.zone_type -replace '&nbsp;',' ' -replace '&amp;','&' -replace '<[^>]*>','').Trim()
@@ -127,6 +128,7 @@ Function Get-IBDomainList {
 
                     $ReturnObject = $null
                     $ReturnObject = New-Object System.Object
+                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainId -Value $DomainId
                     $ReturnObject | Add-Member -Type NoteProperty -Name DomainType -Value $DomainType
                     $ReturnObject | Add-Member -Type NoteProperty -Name DomainCustomPropertyObjectName -Value $DomainCustomPropertyObjectName
                     $ReturnObject | Add-Member -Type NoteProperty -Name DomainFQDN -Value $DomainFQDN
