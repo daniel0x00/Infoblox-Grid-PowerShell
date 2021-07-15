@@ -70,28 +70,22 @@ Function Get-IBDomainRecord {
         [Microsoft.PowerShell.Commands.WebRequestSession] $WebSession,
 
         [Parameter(Mandatory=$true, ValueFromPipelineByPropertyName=$true)]
-        [string] $DomainName,
-
-        [Parameter(Mandatory=$true, ValueFromPipelineByPropertyName=$true)]
         [string] $DomainType,
 
         [Parameter(Mandatory=$true, ValueFromPipelineByPropertyName=$true)]
-        [string] $DomainId,
+        [string] $DomainCustomPropertyObjectName,
+
+        [Parameter(Mandatory=$true, ValueFromPipelineByPropertyName=$true)]
+        [string] $DomainFQDN,
 
         [Parameter(Mandatory=$false, ValueFromPipelineByPropertyName=$true)]
-        [string] $DomainDate,
-
-        [Parameter(Mandatory=$false, ValueFromPipelineByPropertyName=$true)]
-        [string] $DomainDisabled,
-
-        [Parameter(Mandatory=$false, ValueFromPipelineByPropertyName=$true)]
-        [string] $DomainRequester,
-
-        [Parameter(Mandatory=$false, ValueFromPipelineByPropertyName=$true)]
-        [string] $DomainRequest,
+        [string] $DomainZoneType,
 
         [Parameter(Mandatory=$false, ValueFromPipelineByPropertyName=$true)]
         [string] $DomainComment,
+
+        [Parameter(Mandatory=$false, ValueFromPipelineByPropertyName=$true)]
+        [string] $DomainPrimaryServer,
 
         [Parameter(Mandatory=$false, ValueFromPipelineByPropertyName=$true)]
         [ValidateSet("A","AAAA","CNAME","DNAME","DNSKEY","DS","HOST","LBDN","MX","NAPTR","NS","NSEC","NSEC3","NSEC3PARAM","PTR","RRSIG","SRV","TXT","SOA")]
@@ -158,14 +152,13 @@ Function Get-IBDomainRecord {
 
                     $ReturnObject = $null
                     $ReturnObject = New-Object System.Object
-                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainId -Value $DomainId
-                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainName -Value $DomainName
+
                     $ReturnObject | Add-Member -Type NoteProperty -Name DomainType -Value $DomainType
-                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainDisabled -Value $DomainDisabled
-                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainRequester -Value $DomainRequester
-                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainRequest -Value $DomainRequest
+                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainCustomPropertyObjectName -Value $DomainCustomPropertyObjectName
+                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainFQDN -Value $DomainFQDN
+                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainZoneType -Value $DomainZoneType
                     $ReturnObject | Add-Member -Type NoteProperty -Name DomainComment -Value $DomainComment
-                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainDate -Value $DomainDate
+                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainPrimaryServer -Value $DomainPrimaryServer
 
                     $ReturnObject | Add-Member -Type NoteProperty -Name RecordViewType -Value $RecordViewType
                     $ReturnObject | Add-Member -Type NoteProperty -Name RecordCustomPropertyObjectName -Value $RecordCustomPropertyObjectName
