@@ -70,6 +70,9 @@ Function Get-IBDomainRecord {
         [Microsoft.PowerShell.Commands.WebRequestSession] $WebSession,
 
         [Parameter(Mandatory=$true, ValueFromPipelineByPropertyName=$true)]
+        [string] $DomainId,
+
+        [Parameter(Mandatory=$true, ValueFromPipelineByPropertyName=$true)]
         [string] $DomainType,
 
         [Parameter(Mandatory=$true, ValueFromPipelineByPropertyName=$true)]
@@ -102,11 +105,11 @@ Function Get-IBDomainRecord {
                 WebSession = $WebSession
                 Method = 'Post'
                 ContentType = 'application/x-www-form-urlencoded'
-                Body = $APICallURLPostParameters = @{
+                Body = @{
                     wicketAction='renderWicketComponent'
                     context='IBExt.context.DataManagement.DNS.Zones'
                     type='record'
-                    hierInfo="[{`"objectId`":`"dns.network_view`$0`",`"objectType`":`"NetworkView`",`"objectName`":`"`"},{`"objectId`":`"dns.view$._default`",`"objectType`":`"View`",`"objectName`":`"default`",`"scheduled`":false,`"isEditable`":false},{`"isEditable`":true,`"cloudUsage`":`"`",`"scheduled`":false,`"objectName`":`"$DomainName`",`"dnsViewName`":`"default`",`"objectTitleType`":`"`",`"objectId`":`"$DomainId`",`"objectType`":`"$DomainType`"}]"
+                    hierInfo="[{`"objectId`":`"dns.network_view`$0`",`"objectType`":`"NetworkView`",`"objectName`":`"`"},{`"objectId`":`"dns.view$._default`",`"objectType`":`"View`",`"objectName`":`"default`",`"scheduled`":false,`"isEditable`":false},{`"isEditable`":true,`"cloudUsage`":`"`",`"scheduled`":false,`"objectName`":`"$DomainFQDN`",`"dnsViewName`":`"default`",`"objectTitleType`":`"`",`"objectId`":`"$DomainId`",`"objectType`":`"$DomainType`"}]"
                 }
                 Headers = @{
                     "Wicket-Ajax"="true"
@@ -153,6 +156,7 @@ Function Get-IBDomainRecord {
                     $ReturnObject = $null
                     $ReturnObject = New-Object System.Object
 
+                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainId -Value $DomainId
                     $ReturnObject | Add-Member -Type NoteProperty -Name DomainType -Value $DomainType
                     $ReturnObject | Add-Member -Type NoteProperty -Name DomainCustomPropertyObjectName -Value $DomainCustomPropertyObjectName
                     $ReturnObject | Add-Member -Type NoteProperty -Name DomainFQDN -Value $DomainFQDN
