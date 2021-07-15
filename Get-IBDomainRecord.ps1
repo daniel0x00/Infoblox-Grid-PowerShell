@@ -1,8 +1,4 @@
 Function Get-IBDomainRecord {
-    
-    # Author: Daniel Ferreira (@daniel0x00)  
-    # License: BSD 3-Clause
-
     <#
     .SYNOPSIS
         Get a list of all DNS records of the specified domain. 
@@ -152,24 +148,13 @@ Function Get-IBDomainRecord {
                 # Iterate through root object and return results to the pipeline:
                 foreach ($object in $JsonResponse.root) {
 
-                    # Grab data from json response:
-                    $RecordType = [string](([regex]::Match($object.customProperties.objInfo.objectName,"(?<record_type>[A-Za-z0-9]+) [A-Za-z0-9]+ ")).groups["record_type"].value).ToUpper() -replace '&nbsp;',' ' -replace '&amp;','&'
-
-                    # Check if there is a filter for a record type:
-                    #if ((-not($null -ne $Filter)) -and (-not($RecordType -in $Filter))) { continue }
-                    
-                    $RecordName = [string](([regex]::Match($object.dns_name,"<span[^>]*>(?<dns_name>.*?)</span>")).groups["dns_name"].value) -replace '&nbsp;',' ' -replace '&amp;','&'
-                    $RecordValue = [string](([regex]::Match($object.value,"<span[^>]*>(?<value>.*?)</span>")).groups["value"].value) -replace '&nbsp;',' ' -replace '&amp;','&'
-                    # Ext1one: record Implementer
-                    $RecordImplementer = [string](([regex]::Match($object.Ext1one,"<span[^>]*>(?<implementer>.*?)</span>")).groups["implementer"].value) -replace '&nbsp;',' ' -replace '&amp;','&'
-                    # Ext3one: record Requester
-                    $RecordRequester = [string](([regex]::Match($object.Ext3one,"<span[^>]*>(?<requester>.*?)</span>")).groups["requester"].value) -replace '&nbsp;',' ' -replace '&amp;','&'
-                    # creation_timestamp: record Creation
-                    $RecordCreationTimestamp = [string](([regex]::Match($object.creation_timestamp,"<span[^>]*>(?<creation_timestamp>.*?)</span>")).groups["creation_timestamp"].value) -replace '&nbsp;',' ' -replace '&amp;','&'
-                    # Ext0one: record Request
-                    $RecordRequest = [string](([regex]::Match($object.Ext0one,"<span[^>]*>(?<request>.*?)</span>")).groups["request"].value) -replace '&nbsp;',' ' -replace '&amp;','&'
-                    # Ext2one: record Data
-                    $RecordDate = [string](([regex]::Match($object.Ext2one,"<span[^>]*>(?<date>.*?)</span>")).groups["date"].value) -replace '&nbsp;',' ' -replace '&amp;','&'
+                    $RecordName = ($object.name -replace '&nbsp;',' ' -replace '&amp;','&' -replace '<[^>]*>','').Trim()
+                    $RecordValue = ($object.value -replace '&nbsp;',' ' -replace '&amp;','&' -replace '<[^>]*>','').Trim()
+                    $RecordCreator = ($object.creator -replace '&nbsp;',' ' -replace '&amp;','&' -replace '<[^>]*>','').Trim()
+                    $RecordCreationTimestamp = ($object.creation_timestamp -replace '&nbsp;',' ' -replace '&amp;','&' -replace '<[^>]*>','').Trim()
+                    $RecordViewType = ($object.view_type -replace '&nbsp;',' ' -replace '&amp;','&' -replace '<[^>]*>','').Trim()
+                    $RecordComment = ($object.comment -replace '&nbsp;',' ' -replace '&amp;','&' -replace '<[^>]*>','').Trim()
+                    $RecordCustomPropertyObjectName = ($object.customProperties.objInfo.objectName -replace '&nbsp;',' ' -replace '&amp;','&' -replace '<[^>]*>','').Trim()
 
                     $ReturnObject = $null
                     $ReturnObject = New-Object System.Object
@@ -182,13 +167,12 @@ Function Get-IBDomainRecord {
                     $ReturnObject | Add-Member -Type NoteProperty -Name DomainComment -Value $DomainComment
                     $ReturnObject | Add-Member -Type NoteProperty -Name DomainDate -Value $DomainDate
 
+                    $ReturnObject | Add-Member -Type NoteProperty -Name RecordViewType -Value $RecordViewType
+                    $ReturnObject | Add-Member -Type NoteProperty -Name RecordCustomPropertyObjectName -Value $RecordCustomPropertyObjectName
                     $ReturnObject | Add-Member -Type NoteProperty -Name RecordName -Value $RecordName
-                    $ReturnObject | Add-Member -Type NoteProperty -Name RecordType -Value $RecordType
                     $ReturnObject | Add-Member -Type NoteProperty -Name RecordValue -Value $RecordValue
-                    $ReturnObject | Add-Member -Type NoteProperty -Name RecordImplementer -Value $RecordImplementer
-                    $ReturnObject | Add-Member -Type NoteProperty -Name RecordRequester -Value $RecordRequester
-                    $ReturnObject | Add-Member -Type NoteProperty -Name RecordRequest -Value $RecordRequest
-                    $ReturnObject | Add-Member -Type NoteProperty -Name RecordDate -Value $RecordDate
+                    $ReturnObject | Add-Member -Type NoteProperty -Name RecordComment -Value $RecordComment
+                    $ReturnObject | Add-Member -Type NoteProperty -Name RecordCreator -Value $RecordCreator
                     $ReturnObject | Add-Member -Type NoteProperty -Name RecordCreationTimestamp -Value $RecordCreationTimestamp
 
                     $ReturnObject
