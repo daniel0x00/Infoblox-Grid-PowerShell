@@ -1,8 +1,4 @@
 Function Get-IBDomainList {
-
-    # Author: Daniel Ferreira (@daniel0x00)  
-    # License: BSD 3-Clause
-
     <#
     .SYNOPSIS
         Get a list of all domains in DNS records of Infoblox. 
@@ -122,30 +118,22 @@ Function Get-IBDomainList {
                 # Iterate through root object and return results to the pipeline:
                 foreach ($object in $JsonResponse.root) {
 
-                    # TODO: replace HTML by empty string using Regex: <[^>]*>
-
-                    # Ext0one: request
-                    $ObjectRequest = [string](([regex]::Match($object.Ext0one,"<span[^>]*>(?<request>.*?)</span>")).groups["request"].value) -replace '&nbsp;',' ' -replace '&amp;','&'
-                    # Ext2one: json-key represents the date the domain was addded:
-                    $ObjectDate = [string](([regex]::Match($object.Ext2one,"<span[^>]*>(?<date>.*?)</span>")).groups["date"].value) 
-                    # Ext3one: requester
-                    $ObjectRequester = [string](([regex]::Match($object.Ext3one,"<span[^>]*>(?<requester>.*?)</span>")).groups["requester"].value) -replace '&nbsp;',' ' -replace '&amp;','&'
-                    
-                    $ObjectComment = [string](([regex]::Match($object.comment,"<span[^>]*>(?<comment>.*?)</span>")).groups["comment"].value) -replace '&nbsp;',' ' -replace '&amp;','&'
-                    $ObjectDisabled = [string](([regex]::Match($object.disabled,"<span[^>]*>(?<disabled>.*?)</span>")).groups["disabled"].value)
-                    
+                    $DomainFQDN = ($object.fqdn -replace '&nbsp;',' ' -replace '&amp;','&' -replace '<[^>]*>','').Trim()
+                    $DomainType = ($object.ibapObject -replace '&nbsp;',' ' -replace '&amp;','&' -replace '<[^>]*>','').Trim()
+                    $DomainZoneType = ($object.zone_type -replace '&nbsp;',' ' -replace '&amp;','&' -replace '<[^>]*>','').Trim()
+                    $DomainComment = ($object.comment -replace '&nbsp;',' ' -replace '&amp;','&' -replace '<[^>]*>','').Trim()
+                    $DomainPrimaryServer = ($object.grid_primary_server_names -replace '&nbsp;',' ' -replace '&amp;','&' -replace '<[^>]*>','').Trim()
+                    $DomainCustomPropertyObjectName = ($object.customProperties.objInfo.objectName -replace '&nbsp;',' ' -replace '&amp;','&' -replace '<[^>]*>','').Trim()
 
                     $ReturnObject = $null
                     $ReturnObject = New-Object System.Object
-                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainId -Value $object.customProperties.objInfo.objectId
-                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainName -Value $object.customProperties.objInfo.objectName
-                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainType -Value $object.ibapObject
-                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainDisabled -Value $ObjectDisabled
-                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainRequester -Value $ObjectRequester
-                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainRequest -Value $ObjectRequest
-                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainComment -Value $ObjectComment
-                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainDate -Value $ObjectDate
-
+                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainType -Value $DomainType
+                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainCustomPropertyObjectName -Value $DomainCustomPropertyObjectName
+                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainFQDN -Value $DomainFQDN
+                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainZoneType -Value $DomainZoneType
+                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainComment -Value $DomainComment
+                    $ReturnObject | Add-Member -Type NoteProperty -Name DomainPrimaryServer -Value $DomainPrimaryServer
+                    
                     # Check for Passthru, if specified, send WebSession & related required session values to the pipeline
                     if ($Passthru) {
                         $ReturnObject | Add-Member -Type NoteProperty -Name Uri -Value $Uri
